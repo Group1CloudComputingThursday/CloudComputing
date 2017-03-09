@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+	<title>Group Chat</title>
+	
+	<!-- JS dependencies - jQuery is not required, but included to make DOM manipulation and Ajax easier -->
+	<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	
+	<!-- them style.css -->
+	<link rel="stylesheet" href="/style.css" type="text/css" media="screen" title="no title" charset="utf-8"/>
+	
+	<!-- di vao noi dung chinh chat box-->
+	<script type="text/javascript" charset="utf-8">
+		//handle incoming chat messages, pushed by App Engine
+		function onMessage(message) {
+			var current = $('textarea').val();
+			message && $('textarea').val(current + '\n' + message.data);
+		}
+	
+		//khoi tao ung dung chat
+		$(function() {
+			//nhan ma thong bao 
+			$.ajax('/chat',{
+				method:'GET',
+				dataType:'text',
+				success: function(token) {
+					console.log(token);
+					var channel = new goog.appengine.Channel(token);
+					var socket = channel.open();
+					
+					//gan chuc nang xu ly
+					socket.onmessage = onMessage;
+				}
+			});
+			
+			//Xu ly tin nhan duoc submit
+			function submitMessage() {
+				$.ajax('/chat', {
+					method:'POST',
+					dataType:'text',
+					data: {
+						message:$('input').val()
+					},
+					success:function(response) {
+						$('input').val('').focus();
+						console.log(response);
+					}
+				});
+			}
+			
+			//xu ly cac su kien
+			$('button').on('click', submitMessage);
+			$('input').keypress(function (e) {
+				if (e.which == 13) {
+					submitMessage();
+				}
+			});
+		});
+	</script>
+</head>
+
+<body>
+	<div id="container">
+		<header style="margin-top: -100px;" >
+			<div id="header">
+				<h1 style="text-align: center;" class="section-heading">App Engine Chat</h1>
+			</div>
+		</header>
+		<section style="margin-top: -50px;">
+			<div id="content">
+				<!-- Chat inputs/output -->
+				<textarea st readonly value="Awaiting messages..." style="height: 400px;padding-left: 20px; background-color: #FFCCFF;"></textarea>
+				<input placeholder="enter a message..."/>
+				<button class="button">Send Message</button>
+			</div>
+		</section>
+		<footer>
+			<p class="footer">
+				
+			</p>
+		</footer>
+	</div>
+</body>
+</html>
